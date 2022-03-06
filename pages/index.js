@@ -9,6 +9,7 @@ import Button from '@mui/material/Button';
 import styles from '../styles/Home.module.css'
 import useBalance from '../hooks/useBalance';
 
+
 export const getStaticProps = async () => {
 
   const surveyRes = await fetch('https://ratherlabs-challenges.s3.sa-east-1.amazonaws.com/survey-sample.json')
@@ -55,15 +56,18 @@ export default function Home({survey}) {
 
   const contractHash = "0x74F0B668Ea3053052DEAa5Eedd1815f579f0Ee03"
   const decimals = 18
+  const contract = getERC20Contract(contractHash, library)
 
   const [balance] = useBalance(
     contractHash,
     decimals
   )
 
-  const contract = getERC20Contract(contractHash, library)
+  const sendQuizz = async () => {
+    const res = await contract?.methods?.transfer(account, 1000000).send({ from: account})
+    console.log(res)
+  }
 
-  console.log(contract)
   if (error) {  
     return (
       <>
@@ -103,6 +107,7 @@ export default function Home({survey}) {
             : <Button variant="contained" onClick={connect}>Conectar!</Button >
         }
 
+        <Button variant="contained" onClick={sendQuizz}>Enviar Quizz</Button >
         
       </main>
     </div>

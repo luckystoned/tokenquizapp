@@ -41,6 +41,7 @@ export default function useBalance(
             .balanceOf(account)
             .call()
             .then((value) => {
+              console.log(value)
                 resolve(new BN(value))
               })
               .catch((error) => {
