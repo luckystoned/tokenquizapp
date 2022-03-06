@@ -64,7 +64,7 @@ export default function Home({survey}) {
   )
 
   const sendQuizz = async () => {
-    const res = await contract?.methods?.transfer(account, 1000000).send({ from: account})
+    const res = await contract?.methods?.submit(0, [0, 1, 1]).send({ from: account})
     console.log(res)
   }
 
@@ -101,7 +101,7 @@ export default function Home({survey}) {
                   <br />
                   Tu cuenta es: {account}
                   <br />
-                  Tu balance es: {balance} ETH
+                  Tu balance es: {balance} QUIZZ
                 </h2>
               </>
             : <Button variant="contained" onClick={connect}>Conectar!</Button >
