@@ -1,7 +1,7 @@
 import { useEffect ,useCallback } from 'react'
 import Head from 'next/head'
 import { useWeb3React } from '@web3-react/core'
-import { connector } from '../config/web3'
+import { connector, contract } from '../config/web3'
 
 import Button from '@mui/material/Button';
 
@@ -27,8 +27,10 @@ export const getStaticProps = async () => {
 
 export default function Home({abi, survey}) {
 
-  console.log(abi)
-  console.log(survey)
+
+  const surveyContract = contract(abi, "0x74f0b668ea3053052deaa5eedd1815f579f0ee03")
+
+  console.log(surveyContract)
 
   const { activate, active, account, chainId, deactivate, error } = useWeb3React()
   
