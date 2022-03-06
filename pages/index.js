@@ -1,23 +1,21 @@
-import { useEffect ,useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import Head from 'next/head'
 import { useWeb3React } from '@web3-react/core'
-import { connector, contract } from '../config/web3'
+import { injected } from '../components/wallet/connectors'
+import { getERC20Contract } from '../store/contractStore'
 
 import Button from '@mui/material/Button';
 
 import styles from '../styles/Home.module.css'
+import useBalance from '../hooks/useBalance';
 
 export const getStaticProps = async () => {
-
-  const abiRes = await fetch('https://ratherlabs-challenges.s3.sa-east-1.amazonaws.com/survey-abi.json')
-  const abi = await abiRes.json()
 
   const surveyRes = await fetch('https://ratherlabs-challenges.s3.sa-east-1.amazonaws.com/survey-sample.json')
   const survey = await surveyRes.json()
 
   return {
     props: {
-      abi: abi,
       survey: survey
     }
   }
@@ -25,33 +23,48 @@ export const getStaticProps = async () => {
 }
 
 
-export default function Home({abi, survey}) {
+export default function Home({survey}) {
+  
+  const { activate, active, account, chainId, deactivate, error, library } = useWeb3React()
 
-
-  const surveyContract = contract(abi, "0x74f0b668ea3053052deaa5eedd1815f579f0ee03")
-
-  console.log(surveyContract)
-
-  const { activate, active, account, chainId, deactivate, error } = useWeb3React()
+  useEffect(() => {
+    if (window !== undefined) {
+      Promise.all([window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x3' }], // chainId must be in hexadecimal numbers
+      })]);
+    }
+  }, [])
   
   const connect = useCallback(() => {
-    activate(connector)
+    activate(injected)
     localStorage.setItem('previuoslyConnected', true)
   }, [activate])
-
+  
   const disconnect = () => {
     deactivate()
     localStorage.removeItem('previuoslyConnected')
   }
-
+  
   useEffect(() => {
     if (localStorage.getItem('previuoslyConnected') === 'true')
-      connect()
+    connect()
   }, [connect])
+  
+  const blockChainName = chainId === 3 ? 'Ropsten' : 'Otra que no es Ropsten'
 
-  const blockChainName = chainId === 1 ? 'Ethereum' : 'Otra que no es Ethereum'
+  const contractHash = "0x74F0B668Ea3053052DEAa5Eedd1815f579f0Ee03"
+  const decimals = 18
 
-  if (error) {
+  const [balance] = useBalance(
+    contractHash,
+    decimals
+  )
+
+  const contract = getERC20Contract(contractHash, library)
+
+  console.log(contract)
+  if (error) {  
     return (
       <>
         <h1>Upps! Hubo un error durante la conexion:</h1>
@@ -83,6 +96,8 @@ export default function Home({abi, survey}) {
                   Estas conectado a {blockChainName}!
                   <br />
                   Tu cuenta es: {account}
+                  <br />
+                  Tu balance es: {balance} ETH
                 </h2>
               </>
             : <Button variant="contained" onClick={connect}>Conectar!</Button >
