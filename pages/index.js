@@ -1,8 +1,44 @@
 import Head from 'next/head'
-import Image from 'next/image'
+import { useEffect } from 'react/cjs/react.development'
+import { useWeb3React } from '@web3-react/core'
+import { connector } from '../config/web3'
+
+import Button from '@mui/material/Button';
+
 import styles from '../styles/Home.module.css'
+import { useCallback } from 'react'
+
 
 export default function Home() {
+  
+  const { activate, active, account, chainId, deactivate, error } = useWeb3React()
+  
+  const connect = useCallback(() => {
+    activate(connector)
+    localStorage.setItem('previuoslyConnected', true)
+  }, [activate])
+
+  const disconnect = () => {
+    deactivate()
+    localStorage.removeItem('previuoslyConnected')
+  }
+
+  useEffect(() => {
+    if (localStorage.getItem('previuoslyConnected') === 'true')
+      connect()
+  }, [connect])
+
+  const blockChainName = chainId === 1 ? 'Ethereum' : 'Otra que no es Ethereum'
+
+  if (error) {
+    return (
+      <>
+        <h1>Upps! Hubo un error durante la conexion:</h1>
+        <p>{error.message}</p>
+      </>
+    )
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -13,57 +49,26 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Welcome ~
+          to Web3
         </h1>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+        {
+          active
+            ? 
+              <>
+                <Button variant="contained" onClick={disconnect}>Desconectar!</Button >
+                <h2>
+                  Estas conectado a {blockChainName}!
+                  <br />
+                  Tu cuenta es: {account}
+                </h2>
+              </>
+            : <Button variant="contained" onClick={connect}>Conectar!</Button >
+        }
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        
       </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
     </div>
   )
 }
