@@ -1,16 +1,35 @@
+import { useEffect ,useCallback } from 'react'
 import Head from 'next/head'
-import { useEffect } from 'react/cjs/react.development'
 import { useWeb3React } from '@web3-react/core'
 import { connector } from '../config/web3'
 
 import Button from '@mui/material/Button';
 
 import styles from '../styles/Home.module.css'
-import { useCallback } from 'react'
+
+export const getStaticProps = async () => {
+
+  const abiRes = await fetch('https://ratherlabs-challenges.s3.sa-east-1.amazonaws.com/survey-abi.json')
+  const abi = await abiRes.json()
+
+  const surveyRes = await fetch('https://ratherlabs-challenges.s3.sa-east-1.amazonaws.com/survey-sample.json')
+  const survey = await surveyRes.json()
+
+  return {
+    props: {
+      abi: abi,
+      survey: survey
+    }
+  }
+
+}
 
 
-export default function Home() {
-  
+export default function Home({abi, survey}) {
+
+  console.log(abi)
+  console.log(survey)
+
   const { activate, active, account, chainId, deactivate, error } = useWeb3React()
   
   const connect = useCallback(() => {
