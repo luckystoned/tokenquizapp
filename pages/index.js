@@ -1,15 +1,18 @@
 import { useEffect, useCallback, useState } from 'react'
 import Head from 'next/head'
 import { useWeb3React } from '@web3-react/core'
-import { injected, changeToRopsten, getQuizzBalance, sendQuizzToContract } from '../web3'
+import { injected, changeToRopsten, getQuizBalance, sendQuizToContract } from '../web3'
 
+import QuizGame from '../components/QuizGame'
 import Button from '@mui/material/Button';
+
+import styles from '../styles/Home.module.css'
 
 
 
 export const getStaticProps = async () => {
 
-  //Get Quizz Questions
+  //Get Quiz Questions
   const surveyRes = await fetch('https://ratherlabs-challenges.s3.sa-east-1.amazonaws.com/survey-sample.json')
   const survey = await surveyRes.json()
 
@@ -38,6 +41,9 @@ export default function Home({survey}) {
 
   //Set UI until contract response
   const [isLoading, setIsLoading] = useState(false)
+
+  //Set Quiz Game UI
+  const [isQuiz, setIsQuiz] = useState(false)
   
   //Change to Ropsten function
   const handleChangeChain = () => {
@@ -48,7 +54,7 @@ export default function Home({survey}) {
   //Get user balance function
   const handleBalance = useCallback(() => {
     
-    getQuizzBalance(account)
+    getQuizBalance(account)
     .then((balance) => {
       setBalance(balance);
     })
@@ -69,7 +75,6 @@ export default function Home({survey}) {
     
   }, [activate, isRopsten, handleBalance])
   
-  
   //Discount user from Metamask
   const handleDisconnect = () => {
     
@@ -77,37 +82,50 @@ export default function Home({survey}) {
     localStorage.removeItem('previuoslyConnected')
   }
   
-  
   //handle contract response
   const handleContractResponse = useCallback( async (a, b) => {
+
     setContractRes([a, b])
+    setIsQuiz(false)
     setIsLoading(true)
   }, [])
   
-  //Send Quizz function
-  const HandlesendQuizz = async () => {
+  //Send Quiz function
+  const handleSendQuiz = async () => {
     
-    sendQuizzToContract([0, 1, 1], account, handleContractResponse)
+    sendQuizToContract([0, 1, 1], account, handleContractResponse)
   }
     
+  //Start quiz function
+  const handleStartQuiz = () => {
+
+    setIsQuiz(true)
+  }
+
   //Catch contract response and set UI
   useEffect(() => {
 
+    console.log("contractRes", contractRes)
+
     if(contractRes[1] !== undefined) {
+
+      setIsLoading(false)
+
       console.log(contractRes[1].status)
+      
       if(contractRes[1].status) {
+
         console.log("success")
-        setIsLoading(false)
+        handleBalance()
       }else {
+
         console.log("error")
-        setIsLoading(false)
         //use this to show error, like toast
         console.log(contractRes[0].message)
-        handleBalance()
       }
     }
   
-  } , [contractRes, handleBalance])
+  } , [contractRes, handleBalance, isLoading])
     
     //Allow user to connect to Metamask if previuoslyConnected
   useEffect(() => {
@@ -119,15 +137,15 @@ export default function Home({survey}) {
   
 
   //Set UI based on user connection
-  const initQuizzButton = isRopsten ? (
+  const initQuizButton = isRopsten ? (
       <>
         <Button variant="contained" onClick={handleDisconnect}>Desconectar!</Button >
         <h2>
           Tu cuenta es: {account}
           <br />
-          Tu balance es: {balance} QUIZZ
+          Tu balance es: {balance} QUIZ
         </h2>
-        <Button variant="contained" onClick={HandlesendQuizz}>Enviar QUIZZ</Button >
+        <Button variant="contained" onClick={handleStartQuiz}>Start QUIZ</Button >
       </>
     ) : (
       <Button variant="contained" onClick={handleChangeChain}>Cambiar a Ropsten!</Button >
@@ -143,16 +161,20 @@ export default function Home({survey}) {
     )
   }
 
-  //set isLoading UI
-
+  
   if(isLoading) {
     return (
       <>
-        <h1>Enviando QUIZZ...</h1>
+        <h1>Enviando QUIZ...</h1>
       </>
     )
   }
-
+  
+  //set isLoading UI
+  if(isQuiz) {
+    return <QuizGame handleSendQuiz={handleSendQuiz} />
+  }
+  
   return (
     <div className={styles.container}>
       <Head>
@@ -167,13 +189,10 @@ export default function Home({survey}) {
           to Web3
         </h1>
         {
-          active ? initQuizzButton : (
+          active ? initQuizButton : (
             //User connected but not on Ropsten
             <Button variant="contained" onClick={handleConnect}>Conectar!</Button >
           )
-        }
-        {
-
         }
       </main>
     </div>

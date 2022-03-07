@@ -19,7 +19,7 @@ export const init = async () => {
 
 	surveyContract = new web3.eth.Contract(
 		surveyAbi,
-		// QUIZZ contract on Ropsten
+		// QUIZ contract on Ropsten
 		contractAddres
 	)
 
@@ -41,7 +41,7 @@ export const changeToRopsten = async () => {
 }
 
 //Balance Method
-export const getQuizzBalance = async (account) => {
+export const getQuizBalance = async (account) => {
 
 	if (!isInitialized) {
 		await init()
@@ -55,15 +55,15 @@ export const getQuizzBalance = async (account) => {
 		})
 }
 
-//Send Quizz Method
-export const sendQuizzToContract = async (quizz, account, handleContractResponse) => {
+//Send Quiz Method
+export const sendQuizToContract = async (quiz, account, handleContractResponse) => {
     
     if (!isInitialized) {
         await init()
     }
     
     return surveyContract.methods
-        .submit(0, quizz)
+        .submit(0, quiz)
         .send({ from: account})
         .on('transactionHash', handleContractResponse)
         .on('error', handleContractResponse)
