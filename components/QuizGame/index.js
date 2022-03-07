@@ -1,5 +1,6 @@
 import Head from "next/head";
-import { useState } from "react";
+import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export default function QuizGame({ handleSendQuiz, survey }) {
 
@@ -7,6 +8,7 @@ export default function QuizGame({ handleSendQuiz, survey }) {
   //console.log(myQuestions);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [qtyOfAnswers, setQtyOfAnswers] = useState([]);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
 
@@ -28,12 +30,12 @@ export default function QuizGame({ handleSendQuiz, survey }) {
     nextQues < myQuestions.length && setCurrentQuestion(nextQues);
   };
 
+  
   const handleSubmitButton = () => {
-    let newScore = selectedOptions.length
-    setScore(newScore);
+    setScore(selectedOptions.filter(option => typeof option.answerByUser == 'number').length);
     setShowScore(true);
   };
-
+  
   return (
     <div >
       <Head>
@@ -44,14 +46,14 @@ export default function QuizGame({ handleSendQuiz, survey }) {
           <h1>
             You scored {score} out of {myQuestions.length}
           </h1>
-          {selectedOptions.map((answer, index) => (
-            <p key={index}>
-              Pregunta nro {index + 1}
-              <br />
-              Respuesta {answer.answerByUser + 1}
-            </p>
-          ))
-            
+          {
+            selectedOptions.map((answer, index) => (
+              <p key={index}>
+                Pregunta nro {index + 1}
+                <br />
+                Respuesta {answer.answerByUser}
+              </p>
+            ))
           }
         </>
       ) : (
@@ -63,12 +65,14 @@ export default function QuizGame({ handleSendQuiz, survey }) {
             <div>
               {myQuestions[currentQuestion].text}
             </div>
+            <div>
+              <Image src={myQuestions[currentQuestion].image} alt={myQuestions[currentQuestion].text} width="100%" height="100%"></Image>
+            </div>
           </div>
           <div>
             {myQuestions[currentQuestion].options.map((answer, index) => (
               <div
                 key={index}
-                onClick={(e) => handleAnswerOption(answer.text)}
               >
                 <input
                   type="radio"
@@ -80,6 +84,7 @@ export default function QuizGame({ handleSendQuiz, survey }) {
                   }
                   onChange={(e) => handleAnswerOption(index)}
                 />
+                <button  onClick={(e) => handleAnswerOption("sin contestar")}>lifetime</button>
                 <p>{answer.text}</p>
               </div>
             ))}
