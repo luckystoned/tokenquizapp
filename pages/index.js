@@ -105,8 +105,6 @@ export default function Home({survey}) {
   //Catch contract response and set UI
   useEffect(() => {
 
-    console.log("contractRes", contractRes)
-
     if(contractRes[1] !== undefined) {
 
       setIsLoading(false)
@@ -172,7 +170,7 @@ export default function Home({survey}) {
   
   //set isLoading UI
   if(isQuiz) {
-    return <QuizGame handleSendQuiz={handleSendQuiz} />
+    return <QuizGame handleSendQuiz={handleSendQuiz} survey={survey}/>
   }
   
   return (
