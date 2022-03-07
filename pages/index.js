@@ -1,17 +1,15 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import Head from 'next/head'
 import { useWeb3React } from '@web3-react/core'
-import { injected } from '../components/wallet/connectors'
-import { getERC20Contract } from '../store/contractStore'
+import { injected, changeToRopsten, getQuizzBalance, sendQuizzToContract } from '../web3'
 
 import Button from '@mui/material/Button';
 
-import styles from '../styles/Home.module.css'
-import useBalance from '../hooks/useBalance';
 
 
 export const getStaticProps = async () => {
 
+  //Get Quizz Questions
   const surveyRes = await fetch('https://ratherlabs-challenges.s3.sa-east-1.amazonaws.com/survey-sample.json')
   const survey = await surveyRes.json()
 
@@ -26,53 +24,131 @@ export const getStaticProps = async () => {
 
 export default function Home({survey}) {
   
+  //useWeb3React hooks to get web3 instance and user account
   const { activate, active, account, chainId, deactivate, error, library } = useWeb3React()
-
-  useEffect(() => {
-    if (window !== undefined) {
-      Promise.all([window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x3' }], // chainId must be in hexadecimal numbers
-      })]);
-    }
-  }, [])
   
-  const connect = useCallback(() => {
+  //check if user is connected to the correct network
+  const isRopsten = chainId === 3;
+  
+  //set user balance
+  const [balance, setBalance] = useState('0')
+  
+  //Sate of contract response
+  const [contractRes, setContractRes] = useState([])
+
+  //Set UI until contract response
+  const [isLoading, setIsLoading] = useState(false)
+  
+  //Change to Ropsten function
+  const handleChangeChain = () => {
+    
+    changeToRopsten()
+  }
+  
+  //Get user balance function
+  const handleBalance = useCallback(() => {
+    
+    getQuizzBalance(account)
+    .then((balance) => {
+      setBalance(balance);
+    })
+    .catch( err => console.log("er",err))
+    
+  }, [account]);
+  
+  //Connect user to Metamask and get balance if is coneected to Ropsten
+  const handleConnect = useCallback(() => {
+    
     activate(injected)
     localStorage.setItem('previuoslyConnected', true)
-  }, [activate])
+    
+    if(isRopsten) {
+      
+      handleBalance()
+    }
+    
+  }, [activate, isRopsten, handleBalance])
   
-  const disconnect = () => {
+  
+  //Discount user from Metamask
+  const handleDisconnect = () => {
+    
     deactivate()
     localStorage.removeItem('previuoslyConnected')
   }
   
-  useEffect(() => {
-    if (localStorage.getItem('previuoslyConnected') === 'true')
-    connect()
-  }, [connect])
   
-  const blockChainName = chainId === 3 ? 'Ropsten' : 'Otra que no es Ropsten'
-
-  const contractHash = "0x74F0B668Ea3053052DEAa5Eedd1815f579f0Ee03"
-  const decimals = 18
-  const contract = getERC20Contract(contractHash, library)
-
-  const [balance] = useBalance(
-    contractHash,
-    decimals
-  )
-
-  const sendQuizz = async () => {
-    const res = await contract?.methods?.submit(0, [0, 1, 1]).send({ from: account})
-    console.log(res)
+  //handle contract response
+  const handleContractResponse = useCallback( async (a, b) => {
+    setContractRes([a, b])
+    setIsLoading(true)
+  }, [])
+  
+  //Send Quizz function
+  const HandlesendQuizz = async () => {
+    
+    sendQuizzToContract([0, 1, 1], account, handleContractResponse)
   }
+    
+  //Catch contract response and set UI
+  useEffect(() => {
 
+    if(contractRes[1] !== undefined) {
+      console.log(contractRes[1].status)
+      if(contractRes[1].status) {
+        console.log("success")
+        setIsLoading(false)
+      }else {
+        console.log("error")
+        setIsLoading(false)
+        //use this to show error, like toast
+        console.log(contractRes[0].message)
+        handleBalance()
+      }
+    }
+  
+  } , [contractRes, handleBalance])
+    
+    //Allow user to connect to Metamask if previuoslyConnected
+  useEffect(() => {
+    
+    if (localStorage.getItem('previuoslyConnected') === 'true')
+    handleConnect()
+      
+  }, [handleConnect])
+  
+
+  //Set UI based on user connection
+  const initQuizzButton = isRopsten ? (
+      <>
+        <Button variant="contained" onClick={handleDisconnect}>Desconectar!</Button >
+        <h2>
+          Tu cuenta es: {account}
+          <br />
+          Tu balance es: {balance} QUIZZ
+        </h2>
+        <Button variant="contained" onClick={HandlesendQuizz}>Enviar QUIZZ</Button >
+      </>
+    ) : (
+      <Button variant="contained" onClick={handleChangeChain}>Cambiar a Ropsten!</Button >
+    )
+
+  //Set error message
   if (error) {  
     return (
       <>
         <h1>Upps! Hubo un error durante la conexion:</h1>
         <p>{error.message}</p>
+      </>
+    )
+  }
+
+  //set isLoading UI
+
+  if(isLoading) {
+    return (
+      <>
+        <h1>Enviando QUIZZ...</h1>
       </>
     )
   }
@@ -90,25 +166,15 @@ export default function Home({survey}) {
           Welcome ~
           to Web3
         </h1>
-
         {
-          active
-            ? 
-              <>
-                <Button variant="contained" onClick={disconnect}>Desconectar!</Button >
-                <h2>
-                  Estas conectado a {blockChainName}!
-                  <br />
-                  Tu cuenta es: {account}
-                  <br />
-                  Tu balance es: {balance} QUIZZ
-                </h2>
-              </>
-            : <Button variant="contained" onClick={connect}>Conectar!</Button >
+          active ? initQuizzButton : (
+            //User connected but not on Ropsten
+            <Button variant="contained" onClick={handleConnect}>Conectar!</Button >
+          )
         }
+        {
 
-        <Button variant="contained" onClick={sendQuizz}>Enviar Quizz</Button >
-        
+        }
       </main>
     </div>
   )
