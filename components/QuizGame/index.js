@@ -25,7 +25,7 @@ export default function QuizGame({ handleSendQuiz, survey }) {
 
   const handleNext = () => {
     const nextQues = currentQuestion + 1;
-    nextQues < questions.length && setCurrentQuestion(nextQues);
+    nextQues < myQuestions.length && setCurrentQuestion(nextQues);
   };
 
   const handleSubmitButton = () => {
@@ -40,9 +40,20 @@ export default function QuizGame({ handleSendQuiz, survey }) {
         <title>Quiz App</title>
       </Head>
       {showScore ? (
-        <h1>
-          You scored {score} out of {myQuestions.length}
-        </h1>
+        <>
+          <h1>
+            You scored {score} out of {myQuestions.length}
+          </h1>
+          {selectedOptions.map((answer, index) => (
+            <p key={index}>
+              Pregunta nro {index + 1}
+              <br />
+              Respuesta {answer.answerByUser + 1}
+            </p>
+          ))
+            
+          }
+        </>
       ) : (
         <>
           <div>
