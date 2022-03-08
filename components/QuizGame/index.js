@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import Button from '@mui/material/Button';
 
@@ -8,6 +8,7 @@ export default function QuizGame({ handleSendQuiz, survey }) {
 
   //set questions and answers
   const questions = survey.questions;
+  const lifeTimeMiliSeconds = questions.map(question => question.lifetimeSeconds * 1000);
 
   //QUiz UI states
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -15,15 +16,16 @@ export default function QuizGame({ handleSendQuiz, survey }) {
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [contractAnswer, setSetContractAnswer] = useState([]);
+  const [lifeTimeAnswer, setLifeTimeAnswer] = useState(1);
 
   //handle answers
-  const handleAnswerOption = (answer) => {
+  const handleAnswerOption = useCallback((answer) => {
 
     setSelectedOptions([
       (selectedOptions[currentQuestion] = { answerByUser: answer }),
     ]);
     setSelectedOptions([...selectedOptions]);
-  };
+  }, [currentQuestion, selectedOptions]);
 
   //handle prev question
   const handlePrevious = () => {
@@ -33,11 +35,11 @@ export default function QuizGame({ handleSendQuiz, survey }) {
   };
 
   //handle next question
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
 
     const nextQues = currentQuestion + 1;
     nextQues < questions.length && setCurrentQuestion(nextQues);
-  };
+  }, [currentQuestion, questions]);
 
   //handle set score to contract and score
   const handleSetQuizz = () => {
@@ -58,6 +60,21 @@ export default function QuizGame({ handleSendQuiz, survey }) {
     setScore(quizScore);
     setSetContractAnswer(contractScore)
   };
+
+  useEffect(() => {
+    
+    if(lifeTimeAnswer <= questions.length) {
+      console.log(lifeTimeAnswer, questions.length)
+      setInterval(() => {
+        setLifeTimeAnswer(lifeTimeAnswer + 1)
+        handleAnswerOption("sin contestar")
+        handleNext()
+      } , lifeTimeMiliSeconds[lifeTimeAnswer]);
+    }
+
+    console.log(selectedOptions)
+
+  }, [questions, lifeTimeMiliSeconds, handleNext, handleAnswerOption, lifeTimeAnswer])
   
   return (
     <div >
