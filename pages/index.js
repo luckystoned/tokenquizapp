@@ -28,7 +28,7 @@ export const getStaticProps = async () => {
 export default function Home({survey}) {
   
   //useWeb3React hooks to get web3 instance and user account
-  const { activate, active, account, chainId, deactivate, error, library } = useWeb3React()
+  const { activate, active, account, chainId, deactivate, error } = useWeb3React()
   
   //check if user is connected to the correct network
   const isRopsten = chainId === 3;
@@ -91,9 +91,9 @@ export default function Home({survey}) {
   }, [])
   
   //Send Quiz function
-  const handleSendQuiz = async () => {
-    
-    sendQuizToContract([0, 1, 1], account, handleContractResponse)
+  const handleSendQuiz = async (answer) => {
+    console.log(answer)
+    //sendQuizToContract(answer, account, handleContractResponse)
   }
     
   //Start quiz function
