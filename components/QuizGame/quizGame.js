@@ -36,10 +36,9 @@ export default function QuizGame({ handleSendQuiz, survey }) {
     const nextQues = currentQuestion + 1;
     setNextQuestion(nextQues) 
     setLimitTime(questions[nextQuestion].lifetimeSeconds);
-    console.log(limitTime)
     nextQues < questions.length && setCurrentQuestion(nextQues)
 
-  }, [currentQuestion, questions, nextQuestion, limitTime]);
+  }, [currentQuestion, questions, nextQuestion]);
 
   //handle set score to contract and score
   const handleSetQuizzScore = () => {
@@ -80,8 +79,6 @@ export default function QuizGame({ handleSendQuiz, survey }) {
 
   }
   
-  console.log("questions", questions.length)
-  console.log("nextQues", nextQuestion)
   return (
     <div >
       <Head>
