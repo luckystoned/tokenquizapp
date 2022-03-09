@@ -3,7 +3,7 @@ import Head from 'next/head'
 import { useWeb3React } from '@web3-react/core'
 import { injected, changeToRopsten, getQuizBalance, sendQuizToContract } from '../web3'
 
-import QuizGame from '../components/QuizGame'
+import QuizGame from '../components/QuizGame/quizGame'
 import Button from '@mui/material/Button';
 
 import styles from '../styles/Home.module.css'
@@ -98,9 +98,17 @@ export default function Home({survey}) {
     
   //Start quiz function
   const handleStartQuiz = () => {
-
+    
     setIsQuiz(true)
   }
+  
+  //Allow user to connect to Metamask if previuoslyConnected
+  useEffect(() => {
+    
+    if (localStorage.getItem('previuoslyConnected') === 'true')
+    handleConnect()
+      
+  }, [handleConnect])
 
   //Catch contract response and set UI
   useEffect(() => {
@@ -125,13 +133,6 @@ export default function Home({survey}) {
   
   } , [contractRes, handleBalance, isLoading])
     
-    //Allow user to connect to Metamask if previuoslyConnected
-  useEffect(() => {
-    
-    if (localStorage.getItem('previuoslyConnected') === 'true')
-    handleConnect()
-      
-  }, [handleConnect])
   
 
   //Set UI based on user connection
