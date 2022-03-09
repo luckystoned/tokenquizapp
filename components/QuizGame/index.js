@@ -16,8 +16,7 @@ export default function QuizGame({ handleSendQuiz, survey }) {
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [contractAnswer, setSetContractAnswer] = useState([]);
-  const [lifeTimeAnswer, setLifeTimeAnswer] = useState(1);
-
+ 
   //handle answers
   const handleAnswerOption = useCallback((answer) => {
 
@@ -60,21 +59,6 @@ export default function QuizGame({ handleSendQuiz, survey }) {
     setScore(quizScore);
     setSetContractAnswer(contractScore)
   };
-
-  useEffect(() => {
-    
-    if(lifeTimeAnswer <= questions.length) {
-      console.log(lifeTimeAnswer, questions.length)
-      setInterval(() => {
-        setLifeTimeAnswer(lifeTimeAnswer + 1)
-        handleAnswerOption("sin contestar")
-        handleNext()
-      } , lifeTimeMiliSeconds[lifeTimeAnswer]);
-    }
-
-    console.log(selectedOptions)
-
-  }, [questions, lifeTimeMiliSeconds, handleNext, handleAnswerOption, lifeTimeAnswer])
   
   return (
     <div >
