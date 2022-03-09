@@ -1,6 +1,7 @@
+import { useState, useCallback, useEffect } from "react";
+import Countdown from "react-countdown";
 import Head from "next/head";
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
 
 import Button from '@mui/material/Button';
 
@@ -8,37 +9,37 @@ export default function QuizGame({ handleSendQuiz, survey }) {
 
   //set questions and answers
   const questions = survey.questions;
-  const lifeTimeMiliSeconds = questions.map(question => question.lifetimeSeconds * 1000);
 
   //QUiz UI states
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [limitTime, setLimitTime] = useState(questions[currentQuestion].lifetimeSeconds);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [contractAnswer, setSetContractAnswer] = useState([]);
+  const [nextQuestion, setNextQuestion] = useState(1);
  
   //handle answers
   const handleAnswerOption = useCallback((answer) => {
+
 
     setSelectedOptions([
       (selectedOptions[currentQuestion] = { answerByUser: answer }),
     ]);
     setSelectedOptions([...selectedOptions]);
-  }, [currentQuestion, selectedOptions]);
-
-  //handle prev question
-  const handlePrevious = () => {
-
-    const prevQues = currentQuestion - 1;
-    prevQues >= 0 && setCurrentQuestion(prevQues);
-  };
+    handleNext()
+  }, [currentQuestion, selectedOptions, handleNext]);
 
   //handle next question
   const handleNext = useCallback(() => {
 
     const nextQues = currentQuestion + 1;
-    nextQues < questions.length && setCurrentQuestion(nextQues);
-  }, [currentQuestion, questions]);
+    setNextQuestion(nextQues) 
+    setLimitTime(questions[nextQuestion].lifetimeSeconds);
+    console.log(limitTime)
+    nextQues < questions.length && setCurrentQuestion(nextQues)
+
+  }, [currentQuestion, questions, nextQuestion, limitTime]);
 
   //handle set score to contract and score
   const handleSetQuizzScore = () => {
@@ -59,7 +60,28 @@ export default function QuizGame({ handleSendQuiz, survey }) {
     setScore(quizScore);
     setSetContractAnswer(contractScore)
   };
+
+  // Renderer callback with condition
+  const renderer = ({ seconds }) => {
+
+    return (
+      <h1>
+        {seconds}
+      </h1>
+    );
+
+  };
+
+  //Render LifeTime component
+  function LifeTime({ lifeTime }) {
+    const lifeTimeSeconds = lifeTime * 1000;
+
+    return   <Countdown onComplete={() => { handleAnswerOption("sin contestar"); handleNext() }} date={Date.now() + lifeTimeSeconds} renderer={renderer} />
+
+  }
   
+  console.log("questions", questions.length)
+  console.log("nextQues", nextQuestion)
   return (
     <div >
       <Head>
@@ -94,10 +116,11 @@ export default function QuizGame({ handleSendQuiz, survey }) {
               <Image src={questions[currentQuestion].image} alt={questions[currentQuestion].text} width="100%" height="100%"></Image>
             </div>
           </div>
+          {nextQuestion !== questions.length ? (<LifeTime lifeTime={limitTime} />) : "Limit Time!"}
           <div>
             {questions[currentQuestion].options.map((answer, index) => (
               <div
-                key={index}
+              key={index}
               >
                 <input
                   type="radio"
@@ -108,18 +131,13 @@ export default function QuizGame({ handleSendQuiz, survey }) {
                     selectedOptions[currentQuestion]?.answerByUser
                   }
                   onChange={(e) => handleAnswerOption(index)}
+                  disabled={nextQuestion == questions.length}
                 />
-                <button  onClick={(e) => handleAnswerOption("sin contestar")}>lifetime</button>
                 <p>{answer.text}</p>
               </div>
             ))}
           </div>
           <div>
-            <button
-              onClick={handlePrevious}
-            >
-              Previous
-            </button>
             <button
               onClick={
                 currentQuestion + 1 === questions.length
