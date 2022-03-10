@@ -1,8 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Countdown from "react-countdown";
-import Head from "next/head";
 import Image from "next/image";
 
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 
 export default function QuizGame({ handleSendQuiz, survey }) {
@@ -52,8 +57,6 @@ export default function QuizGame({ handleSendQuiz, survey }) {
       return typeof option?.answerByUser == 'number' ? option?.answerByUser : 0;
     })
 
-    console.log("contractScore", contractScore)
-
     //set UI States
     setShowScore(true);
     setScore(quizScore);
@@ -64,9 +67,11 @@ export default function QuizGame({ handleSendQuiz, survey }) {
   const renderer = ({ seconds }) => {
 
     return (
-      <h1>
-        {seconds}
-      </h1>
+      <Box textAlign="center" mt={2}>
+        <Typography variant="h6" component="div" gutterBottom>
+         Limit Time <br /> {seconds}
+        </Typography>
+      </Box>
     );
 
   };
@@ -75,50 +80,52 @@ export default function QuizGame({ handleSendQuiz, survey }) {
   function LifeTime({ lifeTime }) {
     const lifeTimeSeconds = lifeTime * 1000;
 
-    return   <Countdown onComplete={() => { handleAnswerOption("sin contestar"); handleNext() }} date={Date.now() + lifeTimeSeconds} renderer={renderer} />
+    return   <Countdown onComplete={() => { handleAnswerOption("Unanswered"); handleNext() }} date={Date.now() + lifeTimeSeconds} renderer={renderer} />
 
   }
   
   return (
-    <div >
-      <Head>
-        <title>Quiz App</title>
-      </Head>
+    <Box >
       {showScore ? (
         <>
-          <h1>
+          <Typography variant="h1" component="div" gutterBottom>
             You scored {score} out of {questions.length}
-          </h1>
+          </Typography>
           {
             selectedOptions.map((answer, index) => (
               <p key={index}>
-                Pregunta nro {index + 1}
+                Question nro {index + 1}
                 <br />
-                Respuesta {answer.answerByUser}
+                Answer {answer.answerByUser}
               </p>
             ))
           }
-          <Button variant="contained" onClick={ (e) => handleSendQuiz(contractAnswer) }>Enviar QUIZ</Button >
+          <Button variant="contained" onClick={ (e) => handleSendQuiz(contractAnswer) }>Send QUIZ</Button >
         </>
       ) : (
         <>
-          <div>
-            <h4 >
+          <Box>
+            <Typography variant="h2" component="div" gutterBottom>
               Question {currentQuestion + 1} of {questions.length}
-            </h4>
-            <div>
-              {questions[currentQuestion].text}
-            </div>
-            <div>
+            </Typography>
+            <Box textAlign='center'>
+              <Typography variant="h4" component="div" gutterBottom>
+                {questions[currentQuestion].text}
+              </Typography>
               <Image src={questions[currentQuestion].image} alt={questions[currentQuestion].text} width="100%" height="100%"></Image>
-            </div>
-          </div>
+            </Box>
           {nextQuestion !== questions.length ? (<LifeTime lifeTime={limitTime} />) : "Limit Time!"}
-          <div>
+          </Box>
+          <FormGroup>
             {questions[currentQuestion].options.map((answer, index) => (
-              <div
+              <Box
               key={index}
+              sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 0.3fr)' }}
+              mt={5}
               >
+              <Typography variant="h5" component="div" gutterBottom>
+                {answer.text}
+              </Typography>
                 <input
                   type="radio"
                   name={answer.text}
@@ -130,23 +137,20 @@ export default function QuizGame({ handleSendQuiz, survey }) {
                   onChange={(e) => handleAnswerOption(index)}
                   disabled={nextQuestion == questions.length}
                 />
-                <p>{answer.text}</p>
-              </div>
+              </Box>
             ))}
-          </div>
-          <div>
-            <button
-              onClick={
+          </FormGroup>
+          <Box mt={5} textAlign="center">
+            <Button variant="contained" onClick={
                 currentQuestion + 1 === questions.length
                   ? handleSetQuizzScore
                   : handleNext
-              }
-            >
-              {currentQuestion + 1 === questions.length ? "Submit" : "Next"}
-            </button>
-          </div>
+              }>
+              {currentQuestion + 1 === questions.length ? "Submit" : "Next"}  
+            </Button >
+          </Box>
         </>
       )}
-    </div>
+    </Box>
   );
 }
